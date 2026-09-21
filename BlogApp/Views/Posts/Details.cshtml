@@ -1,0 +1,96 @@
+﻿@model BlogApp.Models.Post
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="card mb-4 shadow-sm">
+    <div class="card-body">
+        <h1 class="card-title">@Model.Title</h1>
+        <p class="text-muted">@Model.PublishedAt.ToString("dd.MM.yyyy")</p>
+        <hr />
+        <p class="card-text">@Model.Content</p>
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm">← Назад к списку</a>
+    </div>
+</div>
+
+<h3 class="mb-3">Комментарии (@Model.Comments.Count)</h3>
+
+<div class="comments-list mb-4">
+    @if (Model.Comments.Any())
+    {
+        foreach (var comment in Model.Comments)
+        {
+            <div class="d-flex mb-3">
+                <div class="flex-shrink-0">
+                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+                         style="width: 50px; height: 50px;">
+                        @comment.Author.Substring(0, 1).ToUpper()
+                    </div>
+                </div>
+                <div class="flex-grow-1 ms-3 border rounded p-3 bg-light">
+                    <h6 class="fw-bold mb-1">@comment.Author</h6>
+                    <p class="mb-2">@comment.Text</p>
+
+                    <!-- === ЛАЙК КОММЕНТАРИЯ === -->
+                    <button class="btn btn-sm btn-outline-danger like-comment-btn"
+                            data-comment-id="@comment.Id">
+                        ❤️ <span class="like-count">@comment.Likes</span>
+                    </button>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <p class="text-muted">Пока нет комментариев. Будьте первым!</p>
+    }
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-white">
+        <h5 class="mb-0">Оставьте свой комментарий</h5>
+    </div>
+    <div class="card-body">
+        <form asp-action="AddComment" method="post">
+            <input type="hidden" name="postId" value="@Model.Id" />
+
+            <div class="mb-3">
+                <label for="Author" class="form-label">Имя</label>
+                <input type="text" id="Author" name="Author" class="form-control" required />
+            </div>
+
+            <div class="mb-3">
+                <label for="Text" class="form-label">Текст</label>
+                <textarea id="Text" name="Text" class="form-control" rows="3" required></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-success">Отправить</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // === AJAX: ЛАЙК КОММЕНТАРИЯ ===
+            $('.like-comment-btn').click(function () {
+                var btn = $(this);
+                var commentId = btn.data('comment-id');
+
+                $.ajax({
+                    url: '@Url.Action("LikeComment", "Posts")',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(commentId),
+                    success: function (response) {
+                        btn.find('.like-count').text(response.likes);
+                        btn.addClass('btn-danger').removeClass('btn-outline-danger');
+                    },
+                    error: function () {
+                        alert('Не удалось поставить лайк.');
+                    }
+                });
+            });
+        });
+    </script>
+}

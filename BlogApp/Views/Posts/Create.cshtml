@@ -1,0 +1,35 @@
+﻿@model BlogApp.Models.Post
+@{
+    ViewData["Title"] = "Создать пост";
+}
+
+<h1>Создать новый пост</h1>
+
+<div class="row">
+    <div class="col-md-8">
+        <form asp-action="Create" method="post" class="card p-4 shadow-sm">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="mb-3">
+                <label asp-for="Title" class="form-label"></label>
+                <input asp-for="Title" class="form-control" />
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Content" class="form-label"></label>
+                <textarea asp-for="Content" class="form-control" rows="5"></textarea>
+                <span asp-validation-for="Content" class="text-danger"></span>
+            </div>
+
+            <div>
+                <button type="submit" class="btn btn-primary">Создать</button>
+                <a asp-action="Index" class="btn btn-secondary">Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,109 @@
+﻿@model BlogApp.Models.PagedResult<BlogApp.Models.Post>
+@{
+    ViewData["Title"] = "Главная страница";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Все публикации</h1>
+    <a asp-action="Create" class="btn btn-primary">Создать новый пост</a>
+</div>
+
+<!-- === ПОИСК === -->
+<form asp-action="Index" method="get" class="mb-4">
+    <div class="input-group">
+        <input type="text" name="search" value="@Model.SearchQuery"
+               class="form-control" placeholder="Поиск по заголовку или тексту..." />
+        <button type="submit" class="btn btn-outline-primary">Найти</button>
+        @if (!string.IsNullOrWhiteSpace(Model.SearchQuery))
+        {
+            <a asp-action="Index" class="btn btn-outline-secondary">Сбросить</a>
+        }
+    </div>
+</form>
+
+@if (!Model.Items.Any())
+{
+    <div class="alert alert-info">По вашему запросу ничего не найдено.</div>
+}
+else
+{
+    foreach (var post in Model.Items)
+    {
+        <div class="card mb-3 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title fw-bold">@post.Title</h5>
+                <p class="card-text">@post.Content</p>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <small class="text-muted me-3">@post.PublishedAt.ToString("dd.MM.yyyy")</small>
+
+                        <!-- === ЛАЙК ПОСТА === -->
+                        <button class="btn btn-sm btn-outline-danger like-post-btn"
+                                data-post-id="@post.Id">
+                            ❤️ <span class="like-count">@post.Likes</span>
+                        </button>
+                    </div>
+                    <a asp-action="Details" asp-route-id="@post.Id"
+                       class="btn btn-outline-secondary btn-sm">
+                        Комментарии
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- === ПАГИНАЦИЯ === -->
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                <a class="page-link"
+                   asp-action="Index"
+                   asp-route-page="@(Model.PageNumber - 1)"
+                   asp-route-search="@Model.SearchQuery">← Назад</a>
+            </li>
+
+            @for (int i = 1; i <= Model.TotalPages; i++)
+            {
+                <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                    <a class="page-link"
+                       asp-action="Index"
+                       asp-route-page="@i"
+                       asp-route-search="@Model.SearchQuery">@i</a>
+                </li>
+            }
+
+            <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                <a class="page-link"
+                   asp-action="Index"
+                   asp-route-page="@(Model.PageNumber + 1)"
+                   asp-route-search="@Model.SearchQuery">Вперед →</a>
+            </li>
+        </ul>
+    </nav>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // === AJAX: ЛАЙК ПОСТА ===
+            $('.like-post-btn').click(function () {
+                var btn = $(this);
+                var postId = btn.data('post-id');
+
+                $.ajax({
+                    url: '@Url.Action("LikePost", "Posts")',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(postId),
+                    success: function (response) {
+                        btn.find('.like-count').text(response.likes);
+                        btn.addClass('btn-danger').removeClass('btn-outline-danger');
+                    },
+                    error: function () {
+                        alert('Не удалось поставить лайк.');
+                    }
+                });
+            });
+        });
+    </script>
+}
